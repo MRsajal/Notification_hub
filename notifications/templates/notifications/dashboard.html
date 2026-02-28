@@ -1,552 +1,682 @@
 {% load notification_extras %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notification Hub</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification Hub</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    :root {
-      --bg: #0a0c10;
-      --surface: #111318;
-      --surface2: #181c24;
-      --border: #232838;
-      --border-bright: #2e3650;
-      --accent: #3b82f6;
-      --accent2: #60a5fa;
-      --accent-glow: rgba(59,130,246,0.15);
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --text: #e2e8f0;
-      --text2: #94a3b8;
-      --text3: #475569;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-    }
+      :root {
+        /* Light theme (white base) + red/blue accents */
+        --bg: #f8fafc; /* page background */
+        --surface: #ffffff; /* cards / panels */
+        --surface2: #f1f5f9; /* inputs / hover surfaces */
+        --border: #e2e8f0;
+        --border-bright: #cbd5e1;
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+        --accent: #2563eb; /* blue */
+        --accent2: #1d4ed8; /* deeper blue */
+        --accent-glow: rgba(37, 99, 235, 0.1);
 
-    /* ── TOP BAR ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--accent2);
-      letter-spacing: 0.08em;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logo-icon {
-      width: 28px; height: 28px;
-      background: var(--accent);
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-    }
-    .logo-icon svg { width: 16px; height: 16px; fill: white; }
-    .header-meta {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text3);
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-    .header-badge {
-      background: var(--accent-glow);
-      border: 1px solid var(--accent);
-      color: var(--accent2);
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-family: var(--mono);
-    }
+        --success: #16a34a;
+        --warning: #d97706;
+        --danger: #dc2626; /* red */
 
-    /* ── LAYOUT ── */
-    .app-body {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
+        --text: #0f172a; /* near-black */
+        --text2: #334155;
+        --text3: #64748b;
 
-    /* ── SIDEBAR ── */
-    aside {
-      width: 280px;
-      min-width: 280px;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    .sidebar-header {
-      padding: 16px 20px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-title {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .search-box {
-      position: relative;
-    }
-    .search-box input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 12px;
-      padding: 8px 12px 8px 32px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .search-box input:focus { border-color: var(--accent); }
-    .search-box input::placeholder { color: var(--text3); }
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text3);
-      font-size: 12px;
-    }
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", sans-serif;
+      }
 
-    .nav-list { list-style: none; padding: 8px 0; flex: 1; }
-    .nav-item a {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 9px 20px;
-      text-decoration: none;
-      color: var(--text2);
-      font-size: 13px;
-      border-left: 3px solid transparent;
-      transition: all 0.15s;
-      gap: 8px;
-    }
-    .nav-item a:hover {
-      background: var(--surface2);
-      color: var(--text);
-      border-left-color: var(--border-bright);
-    }
-    .nav-item a.active {
-      background: var(--accent-glow);
-      color: var(--accent2);
-      border-left-color: var(--accent);
-    }
-    .nav-label { flex: 1; font-size: 12.5px; line-height: 1.3; }
-    .nav-count {
-      background: var(--surface2);
-      color: var(--text3);
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 10px;
-      min-width: 24px;
-      text-align: center;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .nav-item a.active .nav-count {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-    .sidebar-footer {
-      padding: 12px 20px;
-      border-top: 1px solid var(--border);
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      display: flex;
-      justify-content: space-between;
-    }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    /* ── MAIN CONTENT ── */
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+      /* ── TOP BAR ── */
+      header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0 24px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .logo {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent2);
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-icon {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, var(--danger), var(--accent));
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+      }
+      .logo-icon svg {
+        width: 16px;
+        height: 16px;
+        fill: white;
+      }
+      .header-meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text3);
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+      .header-badge {
+        background: var(--accent-glow);
+        border: 1px solid var(--accent);
+        color: var(--accent2);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-family: var(--mono);
+      }
 
-    /* ── STATS ROW ── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .stat-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .stat-value {
-      font-family: var(--mono);
-      font-size: 28px;
-      font-weight: 600;
-      color: var(--accent2);
-      line-height: 1;
-    }
-    .stat-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+      /* ── LAYOUT ── */
+      .app-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
 
-    /* ── CONTENT CARD ── */
-    .content-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      flex: 1;
-    }
-    .card-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .card-title .dot {
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .card-actions { display: flex; gap: 8px; }
-    .btn {
-      font-family: var(--mono);
-      font-size: 11px;
-      padding: 6px 14px;
-      border-radius: 5px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.15s;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text2);
-    }
-    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-    .btn-primary:hover { background: var(--accent2); }
+      /* ── SIDEBAR ── */
+      aside {
+        width: 280px;
+        min-width: 280px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-header {
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-title {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .search-box {
+        position: relative;
+      }
+      .search-box input {
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 8px 12px 8px 32px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .search-box input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      .search-box input::placeholder {
+        color: var(--text3);
+      }
+      .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text3);
+        font-size: 12px;
+      }
 
-    .record-count {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text3);
-      background: var(--surface2);
-      padding: 4px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-    }
+      .nav-list {
+        list-style: none;
+        padding: 8px 0;
+        flex: 1;
+      }
+      .nav-item a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 20px;
+        text-decoration: none;
+        color: var(--text2);
+        font-size: 13px;
+        border-left: 3px solid transparent;
+        transition: all 0.15s;
+        gap: 8px;
+      }
+      .nav-item a:hover {
+        background: var(--surface2);
+        color: var(--text);
+        border-left-color: var(--border-bright);
+      }
+      .nav-item a.active {
+        background: var(--accent-glow);
+        color: var(--accent2);
+        border-left-color: var(--accent);
+      }
+      .nav-label {
+        flex: 1;
+        font-size: 12.5px;
+        line-height: 1.3;
+      }
+      .nav-count {
+        background: var(--surface2);
+        color: var(--text3);
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        min-width: 24px;
+        text-align: center;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .nav-item a.active .nav-count {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      .sidebar-footer {
+        padding: 12px 20px;
+        border-top: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        display: flex;
+        justify-content: space-between;
+      }
 
-    /* ── TABLE ── */
-    .table-wrapper {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    thead tr {
-      border-bottom: 1px solid var(--border-bright);
-    }
-    th {
-      text-align: left;
-      padding: 11px 16px;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      white-space: nowrap;
-      background: var(--surface2);
-    }
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      color: var(--text2);
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-    tr:last-child td { border-bottom: none; }
-    tbody tr { transition: background 0.1s; }
-    tbody tr:hover td { background: var(--accent-glow); color: var(--text); }
+      /* ── MAIN CONTENT ── */
+      main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
 
-    td:first-child { 
-      font-family: var(--mono); 
-      font-size: 11px; 
-      color: var(--accent2);
-      font-weight: 500;
-    }
+      /* ── STATS ROW ── */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .stat-label {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .stat-value {
+        font-family: var(--mono);
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--accent2);
+        line-height: 1;
+      }
+      .stat-sub {
+        font-size: 12px;
+        color: var(--text3);
+        margin-top: 2px;
+      }
 
-    /* Priority badges */
-    .badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 3px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .badge-high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-    .badge-medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-    .badge-critical { background: rgba(239,68,68,0.25); color: #ff6b6b; border: 1px solid #ef4444; }
-    .badge-routine { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
-    .badge-drill { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-    .badge-incident { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+      /* ── CONTENT CARD ── */
+      .content-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        flex: 1;
+      }
+      .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card-title .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--danger), var(--accent));
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .card-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 6px 14px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.15s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--text2);
+      }
+      .btn-ghost:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      .btn-primary:hover {
+        background: var(--accent2);
+      }
 
-    /* Empty state */
-    .empty-state {
-      padding: 60px 20px;
-      text-align: center;
-      color: var(--text3);
-    }
-    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; font-family: var(--mono); }
+      .record-count {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text3);
+        background: var(--surface2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
 
-    /* ── SCROLLBARS ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+      /* ── TABLE ── */
+      .table-wrapper {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      thead tr {
+        border-bottom: 1px solid var(--border-bright);
+      }
+      th {
+        text-align: left;
+        padding: 11px 16px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        background: var(--surface2);
+      }
+      td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text2);
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr {
+        transition: background 0.1s;
+      }
+      tbody tr:hover td {
+        background: var(--accent-glow);
+        color: var(--text);
+      }
 
-    /* ── ANIMATIONS ── */
-    .fade-in { animation: fadeIn 0.25s ease-out; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+      td:first-child {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent2);
+        font-weight: 500;
+      }
 
-    /* GRID PATTERN BG overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.3;
-      pointer-events: none;
-      z-index: 0;
-    }
-    header, aside, main { position: relative; z-index: 1; }
-  </style>
-</head>
-<body>
+      /* Priority badges */
+      .badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 3px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .badge-high {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .badge-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      .badge-critical {
+        background: rgba(239, 68, 68, 0.25);
+        color: #ff6b6b;
+        border: 1px solid #ef4444;
+      }
+      .badge-routine {
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .badge-drill {
+        background: rgba(59, 130, 246, 0.1);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+      .badge-incident {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
 
-<!-- ── HEADER ── -->
-<header>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-    </div>
-    NOTIFICATION HUB
-  </div>
-  <div class="header-meta">
-    <span>{{ notification_types|length }} MODULES</span>
-    <span class="header-badge">⬤ LIVE — {{ total_notifications }} TOTAL</span>
-    <span id="clock" style="font-size:11px;"></span>
-  </div>
-</header>
+      /* Empty state */
+      .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--text3);
+      }
+      .empty-state .empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+      }
+      .empty-state p {
+        font-size: 14px;
+        font-family: var(--mono);
+      }
 
-<div class="app-body">
+      /* ── SCROLLBARS ── */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-bright);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text3);
+      }
 
-  <!-- ── SIDEBAR ── -->
-  <aside>
-    <div class="sidebar-header">
-      <div class="sidebar-title">Notification Types</div>
-      <div class="search-box">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="sidebar-search" placeholder="Filter modules…">
-      </div>
-    </div>
-    <ul class="nav-list" id="nav-list">
-      {% for ntype in notification_types %}
-      <li class="nav-item" data-label="{{ ntype|lower }}">
-        <a href="?type={{ ntype|urlencode }}"
-           class="{% if ntype == active_type %}active{% endif %}">
-          <span class="nav-label">{{ ntype }}</span>
-          <span class="nav-count">{{ notification_counts|get_item:ntype }}</span>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-    <div class="sidebar-footer">
-      <span>STATIC MODE</span>
-      <span>→ API READY</span>
-    </div>
-  </aside>
+      /* ── ANIMATIONS ── */
+      .fade-in {
+        animation: fadeIn 0.25s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-  <!-- ── MAIN ── -->
-  <main>
-
-    <!-- Stats Row -->
-    <div class="stats-row fade-in">
-      <div class="stat-card">
-        <div class="stat-label">Active Module</div>
-        <div class="stat-value" style="font-size:18px;color:var(--text)">{{ active_type|truncatechars:22 }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Records in View</div>
-        <div class="stat-value">{{ active_count }}</div>
-        <div class="stat-sub">current type</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Notifications</div>
-        <div class="stat-value">{{ total_notifications }}</div>
-        <div class="stat-sub">all modules</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Modules</div>
-        <div class="stat-value">{{ notification_types|length }}</div>
-        <div class="stat-sub">notification types</div>
-      </div>
-    </div>
-
-    <!-- Table Card -->
-    <div class="content-card fade-in">
-      <div class="card-header">
-        <div class="card-title">
-          <span class="dot"></span>
-          {{ active_type }}
+      /* GRID PATTERN BG overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--border) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 40px 40px;
+        opacity: 0.3;
+        pointer-events: none;
+        z-index: 0;
+      }
+      header,
+      aside,
+      main {
+        position: relative;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── HEADER ── -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span class="record-count">{{ active_count }} records</span>
-          <a class="btn btn-ghost" href="/api/notifications/?type={{ active_type|urlencode }}" target="_blank">
-            ↗ JSON
-          </a>
-        </div>
+        NOTIFICATION HUB
       </div>
+      <div class="header-meta">
+        <span>{{ notification_types|length }} MODULES</span>
+        <span class="header-badge"
+          >⬤ LIVE — {{ total_notifications }} TOTAL</span
+        >
+        <span id="clock" style="font-size: 11px"></span>
+      </div>
+    </header>
 
-      <div class="table-wrapper">
-        {% if active_rows %}
-        <table>
-          <thead>
-            <tr>
-              {% for col in active_columns %}
-              <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in active_rows %}
-            <tr>
-              {% for col in active_columns %}
-              <td>
-                {% with val=row|get_item:col %}
-                  {% if col == "Priority" %}
-                    <span class="badge badge-{{ val|lower }}">{{ val|default:"—" }}</span>
-                  {% elif col == "Type" %}
-                    <span class="badge badge-{{ val|lower }}">{{ val|default:"—" }}</span>
-                  {% else %}
-                    {{ val|default:"—" }}
-                  {% endif %}
-                {% endwith %}
-              </td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">
-          <div class="empty-icon">◻</div>
-          <p>No records for this notification type.</p>
+    <div class="app-body">
+      <!-- ── SIDEBAR ── -->
+      <aside>
+        <div class="sidebar-header">
+          <div class="sidebar-title">Notification Types</div>
+          <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input
+              type="text"
+              id="sidebar-search"
+              placeholder="Filter modules…"
+            />
+          </div>
         </div>
-        {% endif %}
-      </div>
+        <ul class="nav-list" id="nav-list">
+          {% for ntype in notification_types %}
+          <li class="nav-item" data-label="{{ ntype|lower }}">
+            <a
+              href="?type={{ ntype|urlencode }}"
+              class="{% if ntype == active_type %}active{% endif %}"
+            >
+              <span class="nav-label">{{ ntype }}</span>
+              <span class="nav-count"
+                >{{ notification_counts|get_item:ntype }}</span
+              >
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="sidebar-footer">
+          <span>STATIC MODE</span>
+          <span>→ API READY</span>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <main>
+        <!-- Stats Row -->
+        <div class="stats-row fade-in">
+          <div class="stat-card">
+            <div class="stat-label">Active Module</div>
+            <div class="stat-value" style="font-size: 18px; color: var(--text)">
+              {{ active_type|truncatechars:22 }}
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Records in View</div>
+            <div class="stat-value">{{ active_count }}</div>
+            <div class="stat-sub">current type</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Notifications</div>
+            <div class="stat-value">{{ total_notifications }}</div>
+            <div class="stat-sub">all modules</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Modules</div>
+            <div class="stat-value">{{ notification_types|length }}</div>
+            <div class="stat-sub">notification types</div>
+          </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="content-card fade-in">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="dot"></span>
+              {{ active_type }}
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span class="record-count">{{ active_count }} records</span>
+              <a
+                class="btn btn-ghost"
+                href="/api/notifications/?type={{ active_type|urlencode }}"
+                target="_blank"
+              >
+                ↗ JSON
+              </a>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            {% if active_rows %}
+            <table>
+              <thead>
+                <tr>
+                  {% for col in active_columns %}
+                  <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in active_rows %}
+                <tr>
+                  {% for col in active_columns %}
+                  <td>
+                    {% with val=row|get_item:col %} {% if col == "Priority" %}
+                    <span class="badge badge-{{ val|lower }}"
+                      >{{ val|default:"—" }}</span
+                    >
+                    {% elif col == "Type" %}
+                    <span class="badge badge-{{ val|lower }}"
+                      >{{ val|default:"—" }}</span
+                    >
+                    {% else %} {{ val|default:"—" }} {% endif %} {% endwith %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">◻</div>
+              <p>No records for this notification type.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </main>
     </div>
 
-  </main>
-</div>
+    <script>
+      // Live clock
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").textContent = now.toLocaleTimeString(
+          "en-US",
+          { hour12: false },
+        );
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
 
-<script>
-  // Live clock
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent =
-      now.toLocaleTimeString('en-US', { hour12: false });
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  // Sidebar search filter
-  document.getElementById('sidebar-search').addEventListener('input', function() {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('#nav-list .nav-item').forEach(item => {
-      item.style.display = item.dataset.label.includes(q) ? '' : 'none';
-    });
-  });
-</script>
-
-</body>
+      // Sidebar search filter
+      document
+        .getElementById("sidebar-search")
+        .addEventListener("input", function () {
+          const q = this.value.toLowerCase();
+          document.querySelectorAll("#nav-list .nav-item").forEach((item) => {
+            item.style.display = item.dataset.label.includes(q) ? "" : "none";
+          });
+        });
+    </script>
+  </body>
 </html>
